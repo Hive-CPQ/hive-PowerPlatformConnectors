@@ -17,19 +17,19 @@
           },
           "customParameters": {
             "authorizationUrlTemplate": {
-              "value": "https://ebusinesscloud.eu.auth0.com/authorize"
+              "value": "https://authenticate.hivecpq.com/authorize"
             },
             "authorizationUrlQueryStringTemplate": {
               "value": "?audience=https://connect.hivecpq.com&scope={scopes}&redirect_uri={redirectUrl}&client_id={ClientId}&response_type=code&state={State}&prompt=login"
             },
             "tokenUrlTemplate": {
-              "value": "https://ebusinesscloud.eu.auth0.com/oauth/token"
+              "value": "https://authenticate.hivecpq.com/oauth/token"
             },
             "tokenBodyTemplate": {
               "value": "audience=https://connect.hivecpq.com&scope={scopes}&redirect_uri={redirectUrl}&client_id={ClientId}&client_secret={ClientSecret}&code={Code}&grant_type=authorization_code"
             },
             "refreshUrlTemplate": {
-              "value": "https://ebusinesscloud.eu.auth0.com/oauth/token"
+              "value": "https://authenticate.hivecpq.com/oauth/token"
             },
             "refreshBodyTemplate": {
               "value": "audience=https://connect.hivecpq.com&scope={scopes}&redirect_uri={redirectUrl}&client_id={ClientId}&client_secret={ClientSecret}&refresh_token={RefreshToken}&grant_type=refresh_token"

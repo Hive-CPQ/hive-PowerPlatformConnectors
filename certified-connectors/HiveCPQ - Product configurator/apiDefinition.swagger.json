@@ -367,6 +367,12 @@
           },
           {
             "$ref": "#/parameters/pathCompanyId"
+          },
+          {
+            "$ref": "#/parameters/queryIntegratedSystemName"
+          },
+          {
+            "$ref": "#/parameters/queryIntegratedSystemIdsIn"
           }
         ],
         "responses": {
@@ -1060,8 +1066,8 @@
         ]
       },
       "delete": {
-        "summary": "Delete a distributor account",
-        "description": "Delete a specific account from the address book of a distributor. An account can only be removed if it is not used in any projects and has no contacts.",
+        "summary": "Archive a distributor account",
+        "description": "Archive a specific account from the address book of a distributor. The account is archived, not deleted. An account can only be archived if it is not used as an address on any project and has no active contacts.",
         "operationId": "RemovesAnAccountFromTheAddressBookOfADistributor",
         "parameters": [
           {
@@ -1255,8 +1261,8 @@
         ]
       },
       "delete": {
-        "summary": "Delete a distributor contact",
-        "description": "Delete a specific contact from the address book of a distributor.",
+        "summary": "Archive a distributor contact",
+        "description": "Archive a specific contact from the address book of a distributor. The contact is archived, not deleted. A contact can only be archived if it is not used as an address on any project and is not archived yet.",
         "operationId": "RemoveAContactFromAddressBookOfADistributor",
         "parameters": [
           {
@@ -1373,7 +1379,10 @@
         ],
         "responses": {
           "201": {
-            "$ref": "#/responses/defaultCreated"
+            "description": "Created",
+            "schema": {
+              "$ref": "#/definitions/responseInvite"
+            }
           },
           "400": {
             "$ref": "#/responses/defaultBadRequest"
@@ -1399,7 +1408,7 @@
     "/manufacturers/{manufacturerId}/invites/bulkCreate": {
       "post": {
         "summary": "Create invites in bulk",
-        "description": "Create 50 invites for contacts to join a company.",
+        "description": "Create up to 50 invites for contacts to join a company.",
         "operationId": "BulkCreateInvitesForAManufacturer",
         "parameters": [
           {
@@ -1415,8 +1424,11 @@
           }
         ],
         "responses": {
-          "201": {
-            "$ref": "#/responses/defaultCreated"
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/responseBulkResults"
+            }
           },
           "400": {
             "$ref": "#/responses/defaultBadRequest"
@@ -2940,7 +2952,7 @@
     "/manufacturers/{manufacturerId}/containers/{name}/versions/{version}/components/{componentId}/setQuantities": {
       "post": {
         "summary": "Set component quantities",
-        "description": "Set quantities for a component in master data. Existing quantities are overwritten or deleted.",
+        "description": "Set quantities for a component in master data. Quantities are matched on unit, and quantities whose unit is not in the request are removed.",
         "operationId": "SetOrUpdateMultipleComponentQuantities",
         "parameters": [
           {
@@ -3572,6 +3584,110 @@
         },
         "tags": [
           "Property"
+        ]
+      }
+    },
+    "/manufacturers/{manufacturerId}/containers/{name}/versions/{version}/priceCatalogs/categories/bulkUpsert": {
+      "post": {
+        "summary": "Link categories to price catalogs in bulk",
+        "description": "Link sub-categories to up to 50 price catalogs. Each sub-category's main category is linked too. Existing links are kept and already-linked categories are skipped. Each item is handled on its own, so an unknown catalog name or category code fails only that item. Requires pricing version V2.",
+        "operationId": "LinkCategoriesToPriceCatalogsInBulk",
+        "parameters": [
+          {
+            "$ref": "#/parameters/pathManufacturerId"
+          },
+          {
+            "$ref": "#/parameters/pathName"
+          },
+          {
+            "$ref": "#/parameters/pathVersion"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/requestPostBulkUpsertPriceCatalogCategories"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/responseBulkPriceCatalogCategories"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/defaultBadRequest"
+          },
+          "401": {
+            "$ref": "#/responses/defaultNotAuthorized"
+          },
+          "403": {
+            "$ref": "#/responses/defaultForbidden"
+          },
+          "404": {
+            "$ref": "#/responses/defaultNotFound"
+          },
+          "500": {
+            "$ref": "#/responses/defaultServerError"
+          }
+        },
+        "tags": [
+          "PriceCatalog"
+        ]
+      }
+    },
+    "/manufacturers/{manufacturerId}/containers/{name}/versions/{version}/priceCatalogs/categories/bulkDelete": {
+      "post": {
+        "summary": "Unlink categories from price catalogs in bulk",
+        "description": "Unlink categories from up to 50 price catalogs. Omit subCategoryCodes to unlink a main category with all its sub-categories. Unlinking the last linked sub-category also unlinks its main category. Categories that are not linked are skipped. Each item is handled on its own, so an unknown catalog name or category code fails only that item. Requires pricing version V2.",
+        "operationId": "UnlinkCategoriesFromPriceCatalogsInBulk",
+        "parameters": [
+          {
+            "$ref": "#/parameters/pathManufacturerId"
+          },
+          {
+            "$ref": "#/parameters/pathName"
+          },
+          {
+            "$ref": "#/parameters/pathVersion"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/requestPostBulkDeletePriceCatalogCategories"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/responseBulkPriceCatalogCategories"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/defaultBadRequest"
+          },
+          "401": {
+            "$ref": "#/responses/defaultNotAuthorized"
+          },
+          "403": {
+            "$ref": "#/responses/defaultForbidden"
+          },
+          "404": {
+            "$ref": "#/responses/defaultNotFound"
+          },
+          "500": {
+            "$ref": "#/responses/defaultServerError"
+          }
+        },
+        "tags": [
+          "PriceCatalog"
         ]
       }
     },
@@ -4885,11 +5001,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "string"
-            }
+          "204": {
+            "$ref": "#/responses/defaultNoContent"
           },
           "400": {
             "$ref": "#/responses/defaultBadRequest"
@@ -5261,6 +5374,10 @@
                     "$ref": "#/definitions/customObjectKeyValuePair"
                   },
                   "description": "Key value pairs to store inside of the new custom object"
+                },
+                "objectKey": {
+                  "type": "string",
+                  "description": "ID of the custom object. Generated when omitted; an existing object with this ID is replaced. An _id entry in keyValues is rejected."
                 }
               },
               "required": [
@@ -5969,6 +6086,55 @@
         ]
       }
     },
+    "/manufacturers/{manufacturerId}/projects/{projectId}/outputDocuments/generateSignedUrl": {
+      "post": {
+        "summary": "Generate a project document and return a download URL",
+        "description": "Generate a document for a specific project and return a short-lived URL to download it, rather than streaming the bytes. The template ID is optional only if the document type is QUOTE and a default template has been configured.",
+        "operationId": "GenerateAProjectDocumentAndReturnADownloadURL",
+        "parameters": [
+          {
+            "$ref": "#/parameters/pathManufacturerId"
+          },
+          {
+            "$ref": "#/parameters/pathProjectId"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/requestPostProjectGenerateOutputDocumentSignedUrl"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/responseGenerateFileSignedUrl"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/defaultBadRequest"
+          },
+          "401": {
+            "$ref": "#/responses/defaultNotAuthorized"
+          },
+          "403": {
+            "$ref": "#/responses/defaultForbidden"
+          },
+          "404": {
+            "$ref": "#/responses/defaultNotFound"
+          },
+          "500": {
+            "$ref": "#/responses/defaultServerError"
+          }
+        },
+        "tags": [
+          "Project"
+        ]
+      }
+    },
     "/manufacturers/{manufacturerId}/projects/{projectId}/addConfiguration": {
       "post": {
         "summary": "Add a configuration to a project",
@@ -5992,7 +6158,201 @@
         ],
         "responses": {
           "201": {
+            "description": "Created",
+            "schema": {
+              "$ref": "#/definitions/responsePostAddConfiguration"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/defaultBadRequest"
+          },
+          "401": {
+            "$ref": "#/responses/defaultNotAuthorized"
+          },
+          "403": {
+            "$ref": "#/responses/defaultForbidden"
+          },
+          "404": {
+            "$ref": "#/responses/defaultNotFound"
+          },
+          "500": {
+            "$ref": "#/responses/defaultServerError"
+          }
+        },
+        "tags": [
+          "Project"
+        ]
+      }
+    },
+    "/manufacturers/{manufacturerId}/projects/{projectId}/attachments": {
+      "get": {
+        "summary": "Search attachments of a project",
+        "description": "Search the attachments of a specific project, from all three scopes.",
+        "operationId": "SearchAttachmentsOfAProject",
+        "parameters": [
+          {
+            "$ref": "#/parameters/pathManufacturerId"
+          },
+          {
+            "$ref": "#/parameters/pathProjectId"
+          },
+          {
+            "in": "query",
+            "name": "includeDownloadUrl",
+            "x-ms-summary": "Include Download URL",
+            "description": "Add a signed download URL, valid for one hour, to every attachment.",
+            "type": "boolean",
+            "default": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/responseGetProjectAttachments"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/defaultBadRequest"
+          },
+          "401": {
+            "$ref": "#/responses/defaultNotAuthorized"
+          },
+          "403": {
+            "$ref": "#/responses/defaultForbidden"
+          },
+          "404": {
+            "$ref": "#/responses/defaultNotFound"
+          },
+          "500": {
+            "$ref": "#/responses/defaultServerError"
+          }
+        },
+        "tags": [
+          "Project"
+        ]
+      },
+      "post": {
+        "summary": "Add an attachment to a project",
+        "description": "Add an attachment of at most 50 MB to a specific project. An attachment with the same file name and scope is replaced.",
+        "operationId": "AddAnAttachmentToAProject",
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/parameters/pathManufacturerId"
+          },
+          {
+            "$ref": "#/parameters/pathProjectId"
+          },
+          {
+            "$ref": "#/parameters/headerContentTypeMultipartFormData"
+          },
+          {
+            "$ref": "#/parameters/bodyMultiPartFormDataFile"
+          },
+          {
+            "in": "formData",
+            "name": "scope",
+            "x-ms-summary": "Scope",
+            "description": "Who can see the attachment. Use MANUFACTURER_SHARED to share a file with the distributor. DISTRIBUTOR_SHARED is not accepted; distributors upload those files themselves via the UI.",
+            "type": "string",
+            "enum": [
+              "MANUFACTURER_SHARED",
+              "MANUFACTURER_PRIVATE"
+            ],
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
             "$ref": "#/responses/defaultCreated"
+          },
+          "400": {
+            "$ref": "#/responses/defaultBadRequest"
+          },
+          "401": {
+            "$ref": "#/responses/defaultNotAuthorized"
+          },
+          "403": {
+            "$ref": "#/responses/defaultForbidden"
+          },
+          "404": {
+            "$ref": "#/responses/defaultNotFound"
+          },
+          "500": {
+            "$ref": "#/responses/defaultServerError"
+          }
+        },
+        "tags": [
+          "Project"
+        ]
+      }
+    },
+    "/manufacturers/{manufacturerId}/projects/{projectId}/attachments/{attachmentId}": {
+      "delete": {
+        "summary": "Delete an attachment of a project",
+        "description": "Delete an attachment of a specific project, from any scope.",
+        "operationId": "DeleteAnAttachmentOfAProject",
+        "parameters": [
+          {
+            "$ref": "#/parameters/pathManufacturerId"
+          },
+          {
+            "$ref": "#/parameters/pathProjectId"
+          },
+          {
+            "$ref": "#/parameters/pathAttachmentId"
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/responses/defaultNoContent"
+          },
+          "400": {
+            "$ref": "#/responses/defaultBadRequest"
+          },
+          "401": {
+            "$ref": "#/responses/defaultNotAuthorized"
+          },
+          "403": {
+            "$ref": "#/responses/defaultForbidden"
+          },
+          "404": {
+            "$ref": "#/responses/defaultNotFound"
+          },
+          "500": {
+            "$ref": "#/responses/defaultServerError"
+          }
+        },
+        "tags": [
+          "Project"
+        ]
+      }
+    },
+    "/manufacturers/{manufacturerId}/projects/{projectId}/attachments/{attachmentId}/generateSignedUrl": {
+      "post": {
+        "summary": "Generate a signed download URL for a project attachment",
+        "description": "Generate a short-lived signed URL for downloading an attachment of a specific project.",
+        "operationId": "GenerateASignedDownloadURLForAProjectAttachment",
+        "parameters": [
+          {
+            "$ref": "#/parameters/pathManufacturerId"
+          },
+          {
+            "$ref": "#/parameters/pathProjectId"
+          },
+          {
+            "$ref": "#/parameters/pathAttachmentId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/responseGenerateAttachmentSignedUrl"
+            }
           },
           "400": {
             "$ref": "#/responses/defaultBadRequest"
@@ -6240,11 +6600,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "string"
-            }
+          "204": {
+            "$ref": "#/responses/defaultNoContent"
           },
           "400": {
             "$ref": "#/responses/defaultBadRequest"
@@ -6702,7 +7059,7 @@
     "/manufacturers/{manufacturerId}/projectSegments/{projectSegmentId}/addConfiguration": {
       "post": {
         "summary": "Add a configuration to a project segment",
-        "description": "Add a V1 configuration to a specific project segment.",
+        "description": "Add a V1 configuration to a specific project segment. For a V2 configurator, use this segment's addV2Configuration operation.",
         "operationId": "AddAConfiguration",
         "parameters": [
           {
@@ -6722,7 +7079,59 @@
         ],
         "responses": {
           "201": {
-            "$ref": "#/responses/defaultCreated"
+            "description": "Created",
+            "schema": {
+              "$ref": "#/definitions/responsePostAddConfiguration"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/defaultBadRequest"
+          },
+          "401": {
+            "$ref": "#/responses/defaultNotAuthorized"
+          },
+          "403": {
+            "$ref": "#/responses/defaultForbidden"
+          },
+          "404": {
+            "$ref": "#/responses/defaultNotFound"
+          },
+          "500": {
+            "$ref": "#/responses/defaultServerError"
+          }
+        },
+        "tags": [
+          "ProjectSegment"
+        ]
+      }
+    },
+    "/manufacturers/{manufacturerId}/projectSegments/{projectSegmentId}/addV2Configuration": {
+      "post": {
+        "summary": "Add a V2 configuration to a project segment",
+        "description": "Add a V2 configuration to a project segment, optionally from a chosen configurator version (containerName and version). Needs a manufacturer user with the configurator edit permission, otherwise 403. Answers 404 when the segment is unknown or belongs to another manufacturer, no container version matches containerName and version, or the configurator is not found. The 201 has no Location header.",
+        "operationId": "AddAV2ConfigurationToAProjectSegment",
+        "parameters": [
+          {
+            "$ref": "#/parameters/pathManufacturerId"
+          },
+          {
+            "$ref": "#/parameters/pathProjectSegmentId"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/requestPostProjectSegmentAddV2Configuration"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "schema": {
+              "$ref": "#/definitions/responsePostAddConfiguration"
+            }
           },
           "400": {
             "$ref": "#/responses/defaultBadRequest"
@@ -7038,6 +7447,55 @@
         ]
       }
     },
+    "/manufacturers/{manufacturerId}/projectSegments/{projectSegmentId}/outputDocuments/generateSignedUrl": {
+      "post": {
+        "summary": "Generate a segment order summary and return a download URL",
+        "description": "Generate an order summary document for a specific project segment and return a short-lived URL to download it, rather than streaming the bytes.",
+        "operationId": "GenerateASegmentOrderSummaryAndReturnADownloadURL",
+        "parameters": [
+          {
+            "$ref": "#/parameters/pathManufacturerId"
+          },
+          {
+            "$ref": "#/parameters/pathProjectSegmentId"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/requestPostProjectSegmentGenerateOrderSummarySignedUrl"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/responseGenerateFileSignedUrl"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/defaultBadRequest"
+          },
+          "401": {
+            "$ref": "#/responses/defaultNotAuthorized"
+          },
+          "403": {
+            "$ref": "#/responses/defaultForbidden"
+          },
+          "404": {
+            "$ref": "#/responses/defaultNotFound"
+          },
+          "500": {
+            "$ref": "#/responses/defaultServerError"
+          }
+        },
+        "tags": [
+          "ProjectSegment"
+        ]
+      }
+    },
     "/manufacturers/{manufacturerId}/projectSegmentItems": {
       "get": {
         "summary": "Search project segment items",
@@ -7179,7 +7637,7 @@
             "$ref": "#/responses/defaultNoContent"
           },
           "400": {
-            "$ref": "#/responses/defaultBadRequest"
+            "description": "The item's segment is ordered, the quantity is below the product's minimum, the currency code is invalid, the price has no unitCode while the manufacturer uses pricing V2 (UNIT_IS_REQUIRED_V2_PRICING), or the unitCode does not exist in the container version of the item's product (NO_UNIT_FOUND_BY_CODE)."
           },
           "401": {
             "$ref": "#/responses/defaultNotAuthorized"
@@ -7305,6 +7763,185 @@
         "responses": {
           "201": {
             "$ref": "#/responses/projectSegmentItemCopied"
+          },
+          "400": {
+            "$ref": "#/responses/defaultBadRequest"
+          },
+          "401": {
+            "$ref": "#/responses/defaultNotAuthorized"
+          },
+          "403": {
+            "$ref": "#/responses/defaultForbidden"
+          },
+          "404": {
+            "$ref": "#/responses/defaultNotFound"
+          },
+          "500": {
+            "$ref": "#/responses/defaultServerError"
+          }
+        },
+        "tags": [
+          "ProjectSegmentItem"
+        ]
+      }
+    },
+    "/manufacturers/{manufacturerId}/projectSegmentItems/{projectSegmentItemId}/attachments": {
+      "get": {
+        "summary": "Search attachments of a project segment item",
+        "description": "Search the attachments of a specific project segment item, from both scopes.",
+        "operationId": "SearchAttachmentsOfAProjectSegmentItem",
+        "parameters": [
+          {
+            "$ref": "#/parameters/pathManufacturerId"
+          },
+          {
+            "$ref": "#/parameters/pathProjectSegmentItemId"
+          },
+          {
+            "in": "query",
+            "name": "includeDownloadUrl",
+            "x-ms-summary": "Include Download URL",
+            "description": "Add a signed download URL, valid for one hour, to every attachment.",
+            "type": "boolean",
+            "default": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/responseGetProjectSegmentItemAttachments"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/defaultBadRequest"
+          },
+          "401": {
+            "$ref": "#/responses/defaultNotAuthorized"
+          },
+          "403": {
+            "$ref": "#/responses/defaultForbidden"
+          },
+          "404": {
+            "$ref": "#/responses/defaultNotFound"
+          },
+          "500": {
+            "$ref": "#/responses/defaultServerError"
+          }
+        },
+        "tags": [
+          "ProjectSegmentItem"
+        ]
+      },
+      "post": {
+        "summary": "Add an attachment to a project segment item",
+        "description": "Add an attachment of at most 50 MB to a specific project segment item. It is stored with scope MANUFACTURER_SHARED. An attachment with the same file name is replaced.",
+        "operationId": "AddAnAttachmentToAProjectSegmentItem",
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/parameters/pathManufacturerId"
+          },
+          {
+            "$ref": "#/parameters/pathProjectSegmentItemId"
+          },
+          {
+            "$ref": "#/parameters/headerContentTypeMultipartFormData"
+          },
+          {
+            "$ref": "#/parameters/bodyMultiPartFormDataFile"
+          }
+        ],
+        "responses": {
+          "201": {
+            "$ref": "#/responses/defaultCreated"
+          },
+          "400": {
+            "$ref": "#/responses/defaultBadRequest"
+          },
+          "401": {
+            "$ref": "#/responses/defaultNotAuthorized"
+          },
+          "403": {
+            "$ref": "#/responses/defaultForbidden"
+          },
+          "404": {
+            "$ref": "#/responses/defaultNotFound"
+          },
+          "500": {
+            "$ref": "#/responses/defaultServerError"
+          }
+        },
+        "tags": [
+          "ProjectSegmentItem"
+        ]
+      }
+    },
+    "/manufacturers/{manufacturerId}/projectSegmentItems/{projectSegmentItemId}/attachments/{attachmentId}": {
+      "delete": {
+        "summary": "Delete an attachment of a project segment item",
+        "description": "Delete an attachment of a specific project segment item, from either scope.",
+        "operationId": "DeleteAnAttachmentOfAProjectSegmentItem",
+        "parameters": [
+          {
+            "$ref": "#/parameters/pathManufacturerId"
+          },
+          {
+            "$ref": "#/parameters/pathProjectSegmentItemId"
+          },
+          {
+            "$ref": "#/parameters/pathAttachmentId"
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/responses/defaultNoContent"
+          },
+          "400": {
+            "$ref": "#/responses/defaultBadRequest"
+          },
+          "401": {
+            "$ref": "#/responses/defaultNotAuthorized"
+          },
+          "403": {
+            "$ref": "#/responses/defaultForbidden"
+          },
+          "404": {
+            "$ref": "#/responses/defaultNotFound"
+          },
+          "500": {
+            "$ref": "#/responses/defaultServerError"
+          }
+        },
+        "tags": [
+          "ProjectSegmentItem"
+        ]
+      }
+    },
+    "/manufacturers/{manufacturerId}/projectSegmentItems/{projectSegmentItemId}/attachments/{attachmentId}/generateSignedUrl": {
+      "post": {
+        "summary": "Generate a signed download URL for a project segment item attachment",
+        "description": "Generate a short-lived signed URL for downloading an attachment of a specific project segment item.",
+        "operationId": "GenerateASignedDownloadURLForAProjectSegmentItemAttachment",
+        "parameters": [
+          {
+            "$ref": "#/parameters/pathManufacturerId"
+          },
+          {
+            "$ref": "#/parameters/pathProjectSegmentItemId"
+          },
+          {
+            "$ref": "#/parameters/pathAttachmentId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/responseGenerateAttachmentSignedUrl"
+            }
           },
           "400": {
             "$ref": "#/responses/defaultBadRequest"
@@ -7498,11 +8135,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/responseGetConfiguration"
-            }
+          "204": {
+            "$ref": "#/responses/defaultNoContent"
           },
           "400": {
             "$ref": "#/responses/defaultBadRequest"
@@ -7637,6 +8271,14 @@
             "$ref": "#/parameters/pathConfigurationId"
           },
           {
+            "in": "query",
+            "name": "includeConfigurationStatus",
+            "x-ms-summary": "Include Configuration Status",
+            "description": "Return the resulting configurationStatus in the response body.",
+            "type": "boolean",
+            "default": false
+          },
+          {
             "name": "body",
             "in": "body",
             "schema": {
@@ -7646,8 +8288,14 @@
           }
         ],
         "responses": {
+          "200": {
+            "description": "OK. Only returned when includeConfigurationStatus is true.",
+            "schema": {
+              "$ref": "#/definitions/responseCheckConfiguration"
+            }
+          },
           "204": {
-            "$ref": "#/responses/defaultNoContent"
+            "description": "No Content. Returned when includeConfigurationStatus is false or omitted."
           },
           "400": {
             "$ref": "#/responses/defaultBadRequest"
@@ -7706,6 +8354,158 @@
           },
           "204": {
             "$ref": "#/responses/defaultNoContent"
+          },
+          "400": {
+            "$ref": "#/responses/defaultBadRequest"
+          },
+          "401": {
+            "$ref": "#/responses/defaultNotAuthorized"
+          },
+          "403": {
+            "$ref": "#/responses/defaultForbidden"
+          },
+          "404": {
+            "$ref": "#/responses/defaultNotFound"
+          },
+          "500": {
+            "$ref": "#/responses/defaultServerError"
+          }
+        },
+        "tags": [
+          "Configuration"
+        ]
+      },
+      "put": {
+        "summary": "Replace file in a configuration",
+        "description": "Upload a file to a file node in the configuration. Any file already attached to the node is replaced. Only supported for B2B and standalone configurations.",
+        "operationId": "ReplaceFileInAConfiguration",
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/parameters/pathManufacturerId"
+          },
+          {
+            "$ref": "#/parameters/pathConfigurationId"
+          },
+          {
+            "in": "path",
+            "name": "uniqueLabel",
+            "x-ms-summary": "File Node Unique Label",
+            "description": "The unique label of the file node.",
+            "type": "string",
+            "required": true
+          },
+          {
+            "$ref": "#/parameters/headerContentTypeMultipartFormData"
+          },
+          {
+            "$ref": "#/parameters/bodyMultiPartFormDataFile"
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/responses/defaultNoContent"
+          },
+          "400": {
+            "$ref": "#/responses/defaultBadRequest"
+          },
+          "401": {
+            "$ref": "#/responses/defaultNotAuthorized"
+          },
+          "403": {
+            "$ref": "#/responses/defaultForbidden"
+          },
+          "404": {
+            "$ref": "#/responses/defaultNotFound"
+          },
+          "405": {
+            "$ref": "#/responses/defaultMethodNotAllowed"
+          },
+          "500": {
+            "$ref": "#/responses/defaultServerError"
+          }
+        },
+        "tags": [
+          "Configuration"
+        ]
+      },
+      "delete": {
+        "summary": "Delete file from a configuration",
+        "description": "Delete the file attached to a file node in the configuration and clear its value. Only supported for B2B and standalone configurations.",
+        "operationId": "DeleteFileFromAConfiguration",
+        "parameters": [
+          {
+            "$ref": "#/parameters/pathManufacturerId"
+          },
+          {
+            "$ref": "#/parameters/pathConfigurationId"
+          },
+          {
+            "in": "path",
+            "name": "uniqueLabel",
+            "x-ms-summary": "File Node Unique Label",
+            "description": "The unique label of the file node.",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/responses/defaultNoContent"
+          },
+          "400": {
+            "$ref": "#/responses/defaultBadRequest"
+          },
+          "401": {
+            "$ref": "#/responses/defaultNotAuthorized"
+          },
+          "403": {
+            "$ref": "#/responses/defaultForbidden"
+          },
+          "404": {
+            "$ref": "#/responses/defaultNotFound"
+          },
+          "405": {
+            "$ref": "#/responses/defaultMethodNotAllowed"
+          },
+          "500": {
+            "$ref": "#/responses/defaultServerError"
+          }
+        },
+        "tags": [
+          "Configuration"
+        ]
+      }
+    },
+    "/manufacturers/{manufacturerId}/configurations/{configurationId}/nodes/{uniqueLabel}/generateSignedUrl": {
+      "post": {
+        "summary": "Generate a download URL for a configuration file",
+        "description": "Generate a download URL for the file attached to a file node in the configuration.",
+        "operationId": "GenerateADownloadURLForAConfigurationFile",
+        "parameters": [
+          {
+            "$ref": "#/parameters/pathManufacturerId"
+          },
+          {
+            "$ref": "#/parameters/pathConfigurationId"
+          },
+          {
+            "in": "path",
+            "name": "uniqueLabel",
+            "x-ms-summary": "File Node Unique Label",
+            "description": "The unique label of the file node.",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/responseGenerateConfigurationFileUrl"
+            }
           },
           "400": {
             "$ref": "#/responses/defaultBadRequest"
@@ -9374,6 +10174,50 @@
         ]
       }
     },
+    "/manufacturers/{manufacturerId}/complaints/{complaintId}/attachments/{attachmentId}/generateSignedUrl": {
+      "post": {
+        "summary": "Generate a signed download URL for a complaint attachment",
+        "description": "Generate a short-lived signed URL for downloading an attachment of a specific complaint.",
+        "operationId": "GenerateASignedDownloadURLForAComplaintAttachment",
+        "parameters": [
+          {
+            "$ref": "#/parameters/pathManufacturerId"
+          },
+          {
+            "$ref": "#/parameters/pathComplaintId"
+          },
+          {
+            "$ref": "#/parameters/pathAttachmentId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/responseGenerateFileSignedUrl"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/defaultBadRequest"
+          },
+          "401": {
+            "$ref": "#/responses/defaultNotAuthorized"
+          },
+          "403": {
+            "$ref": "#/responses/defaultForbidden"
+          },
+          "404": {
+            "$ref": "#/responses/defaultNotFound"
+          },
+          "500": {
+            "$ref": "#/responses/defaultServerError"
+          }
+        },
+        "tags": [
+          "Complaint"
+        ]
+      }
+    },
     "/manufacturers/{manufacturerId}/userAccounts/{userAccountId}": {
       "get": {
         "summary": "Get a user account",
@@ -9606,33 +10450,34 @@
             "description": "Filter on the type of the events.",
             "type": "string",
             "enum": [
-              "LOGIN",
-              "INVITE_SENT",
-              "INVITE_CLAIMED",
               "PROJECT_CREATED",
-              "PROJECT_SEGMENT_ITEM_CREATED",
-              "PROJECT_SEGMENT_ITEM_COPIED",
-              "PROJECT_SEGMENT_MOVEDTOSTEP3",
-              "PROJECT_SEGMENT_MOVEDTOSTEP4",
-              "PROJECT_SEGMENT_ARCHIVED",
-              "PROJECT_SEGMENT_UNARCHIVED",
-              "ITEM_CONFIG_UPDATED_IN_STEP_3_OR_4",
-              "PROJECT_SEGMENT_ITEM_UPDATED",
-              "PROJECT_SEGMENT_ITEM_DELETED",
-              "PROJECT_SEGMENT_RECALCULATION_REQUESTED",
-              "PROJECT_SEGMENT_RECALCULATE_FINISHED",
-              "PROJECT_SEGMENT_CREATED",
-              "PROJECT_ADDRESSES_UPDATED",
+              "PROJECT_COPIED",
               "PROJECT_DETAILS_UPDATED",
-              "PROJECT_SEGMENT_MOVED_TO_QUOTATION",
+              "PROJECT_ADDRESSES_UPDATED",
+              "PROJECT_REMOVED",
+              "PROJECT_SEGMENT_CREATED",
               "PROJECT_SEGMENT_UPDATED",
-              "PROJECT_SEGMENT_FOLLOW_TAB_UPDATED",
-              "PROJECT_SEGMENT_ITEM_UPGRADED",
+              "PROJECT_SEGMENT_MOVED_TO_QUOTATION",
               "PROJECT_SEGMENT_MOVEDTOSTEP1",
               "PROJECT_SEGMENT_MOVEDTOSTEP2",
-              "PROJECT_COPIED",
-              "PROJECT_REMOVED",
-              "USER_LANGUAGE_CHANGED"
+              "PROJECT_SEGMENT_MOVEDTOSTEP3",
+              "PROJECT_SEGMENT_MOVEDTOSTEP4",
+              "PROJECT_SEGMENT_RECALCULATION_REQUESTED",
+              "PROJECT_SEGMENT_RECALCULATE_FINISHED",
+              "PROJECT_SEGMENT_FOLLOW_TAB_UPDATED",
+              "PROJECT_SEGMENT_ARCHIVED",
+              "PROJECT_SEGMENT_UNARCHIVED",
+              "PROJECT_SEGMENT_ITEM_CREATED",
+              "PROJECT_SEGMENT_ITEM_COPIED",
+              "PROJECT_SEGMENT_ITEM_UPDATED",
+              "PROJECT_SEGMENT_ITEM_DELETED",
+              "PROJECT_SEGMENT_ITEM_UPGRADED",
+              "ITEM_CONFIG_UPDATED_IN_STEP_3_OR_4",
+              "INVITE_SENT",
+              "INVITE_CLAIMED",
+              "LOGIN",
+              "USER_LANGUAGE_CHANGED",
+              "WEBHOOK_TRIGGER_EXECUTED"
             ]
           },
           {
@@ -9646,7 +10491,8 @@
               "INVITE",
               "PROJECT",
               "PROJECT_SEGMENT",
-              "PROJECT_SEGMENT_ITEM"
+              "PROJECT_SEGMENT_ITEM",
+              "MANUAL"
             ]
           },
           {
@@ -10296,6 +11142,9 @@
         },
         "href": {
           "$ref": "#/definitions/linkHref"
+        },
+        "versionId": {
+          "type": "string"
         }
       },
       "description": "A link to a configurator."
@@ -10333,7 +11182,10 @@
           "default": null
         }
       },
-      "description": "The standard format of inputs for V2 configurators."
+      "description": "The standard format of inputs for V2 configurators.",
+      "required": [
+        "uniqueLabel"
+      ]
     },
     "address": {
       "type": "object",
@@ -10424,6 +11276,30 @@
           "type": "string",
           "description": "Name of the contact person."
         },
+        "address": {
+          "$ref": "#/definitions/address"
+        }
+      }
+    },
+    "invoiceCompanyContact": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "Contact e-mail address."
+        },
+        "companyName": {
+          "type": "string",
+          "description": "Name of the company."
+        },
+        "contactPhone": {
+          "type": "string",
+          "description": "Contact phone number."
+        },
+        "contactName": {
+          "type": "string",
+          "description": "Name of the contact person."
+        },
         "companyVatNumber": {
           "type": "string",
           "description": "VAT number of the company."
@@ -10475,6 +11351,10 @@
         "externalSystemId2": {
           "type": "string",
           "description": "An ID used to identify the company in an external system. It is usually recommended to use a system link instead."
+        },
+        "zoneOffset": {
+          "type": "string",
+          "description": "Time zone of the company as a UTC offset +HH:MM or -HH:MM, with hours +00 to +14 or -01 to -12 and minutes 00, 15, 30 or 45, for example +02:00 or -03:45. An empty string is accepted and clears the time zone."
         }
       },
       "description": "The general info about a company.",
@@ -10582,7 +11462,8 @@
         },
         "priceCatalogId": {
           "type": "string",
-          "description": "ID of the price catalog used for this company."
+          "x-ms-summary": "priceCatalogId (Deprecated)",
+          "description": "(Deprecated) ID of the price catalog to assign to this company. With pricing V1 this is the only way to assign a price catalog. With pricing V2, use priceCatalogIds instead; it takes precedence when both are sent."
         },
         "storeDiscountPercentage": {
           "type": "number",
@@ -10590,6 +11471,76 @@
           "description": "The discount percentage applied to product store items in a project of this company.",
           "minimum": -100,
           "maximum": 100
+        },
+        "priceCatalogIds": {
+          "type": "array",
+          "description": "IDs of all price catalogs to assign to this company. Only applied with pricing V2; ignored with pricing V1, where priceCatalogId is used.",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Product store settings of this company."
+    },
+    "responseCompanyProductStore": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Allow this company to access the product store",
+          "default": false
+        },
+        "priceCatalogId": {
+          "type": "string",
+          "x-ms-summary": "priceCatalogId (Deprecated)",
+          "description": "(Deprecated) ID of the price catalog used for this company. Use priceCatalogs, which lists every assigned price catalog under both pricing versions."
+        },
+        "storeDiscountPercentage": {
+          "type": "number",
+          "format": "float",
+          "description": "The discount percentage applied to product store items in a project of this company.",
+          "minimum": -100,
+          "maximum": 100
+        },
+        "priceCatalogs": {
+          "type": "array",
+          "description": "All price catalogs assigned to this company.",
+          "items": {
+            "type": "object",
+            "description": "A price catalog assigned to a company.",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "PRICE",
+                  "DISCOUNT",
+                  "BOTH"
+                ]
+              },
+              "currency": {
+                "type": "string",
+                "description": "Currency in ISO 4217 format."
+              },
+              "startDate": {
+                "type": "string",
+                "format": "date"
+              },
+              "endDate": {
+                "type": "string",
+                "format": "date"
+              },
+              "isProtected": {
+                "type": "boolean",
+                "description": "Whether this price catalog is managed by a connector."
+              }
+            }
+          }
         }
       },
       "description": "Product store settings of this company."
@@ -10706,8 +11657,10 @@
         "STRING",
         "BOOLEAN",
         "INTEGER",
+        "NUMBER",
         "DECIMAL",
-        "JSON"
+        "JSON",
+        "DATE"
       ]
     },
     "enumProjectSegmentOrderStatus": {
@@ -10775,6 +11728,14 @@
         "ACCEPT_UPGRADE"
       ]
     },
+    "enumProjectSegmentConfigurationStatus": {
+      "type": "string",
+      "description": "The configuration validation status of this segment.",
+      "enum": [
+        "VALID",
+        "ERROR"
+      ]
+    },
     "enumCustomObjectValueDataType": {
       "type": "string",
       "description": "The data types which can be used for custom object values.",
@@ -10828,6 +11789,7 @@
         "PROJECT_COPIED",
         "PROJECT_DETAILS_UPDATED",
         "PROJECT_ADDRESSES_UPDATED",
+        "PROJECT_REMOVED",
         "PROJECT_SEGMENT_CREATED",
         "PROJECT_SEGMENT_UPDATED",
         "PROJECT_SEGMENT_FOLLOW_TAB_UPDATED",
@@ -10848,7 +11810,42 @@
         "ITEM_CONFIG_UPDATED_IN_STEP_3_OR_4",
         "INVITE_SENT",
         "INVITE_CLAIMED",
-        "LOGIN"
+        "LOGIN",
+        "USER_LANGUAGE_CHANGED"
+      ]
+    },
+    "enumEventType": {
+      "type": "string",
+      "description": "Type of the event.",
+      "enum": [
+        "PROJECT_CREATED",
+        "PROJECT_COPIED",
+        "PROJECT_DETAILS_UPDATED",
+        "PROJECT_ADDRESSES_UPDATED",
+        "PROJECT_REMOVED",
+        "PROJECT_SEGMENT_CREATED",
+        "PROJECT_SEGMENT_UPDATED",
+        "PROJECT_SEGMENT_MOVED_TO_QUOTATION",
+        "PROJECT_SEGMENT_MOVEDTOSTEP1",
+        "PROJECT_SEGMENT_MOVEDTOSTEP2",
+        "PROJECT_SEGMENT_MOVEDTOSTEP3",
+        "PROJECT_SEGMENT_MOVEDTOSTEP4",
+        "PROJECT_SEGMENT_RECALCULATION_REQUESTED",
+        "PROJECT_SEGMENT_RECALCULATE_FINISHED",
+        "PROJECT_SEGMENT_FOLLOW_TAB_UPDATED",
+        "PROJECT_SEGMENT_ARCHIVED",
+        "PROJECT_SEGMENT_UNARCHIVED",
+        "PROJECT_SEGMENT_ITEM_CREATED",
+        "PROJECT_SEGMENT_ITEM_COPIED",
+        "PROJECT_SEGMENT_ITEM_UPDATED",
+        "PROJECT_SEGMENT_ITEM_DELETED",
+        "PROJECT_SEGMENT_ITEM_UPGRADED",
+        "ITEM_CONFIG_UPDATED_IN_STEP_3_OR_4",
+        "INVITE_SENT",
+        "INVITE_CLAIMED",
+        "LOGIN",
+        "USER_LANGUAGE_CHANGED",
+        "WEBHOOK_TRIGGER_EXECUTED"
       ]
     },
     "enumEventGroup": {
@@ -10937,14 +11934,70 @@
         "CANCELLED"
       ]
     },
+    "responseInvite": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "ID of an invite."
+        },
+        "status": {
+          "$ref": "#/definitions/enumInviteStatus"
+        },
+        "toEmail": {
+          "type": "string",
+          "description": "The e-mail address to which the invite was sent."
+        },
+        "createdAt": {
+          "$ref": "#/definitions/createdAt"
+        },
+        "claimedAt": {
+          "type": "string",
+          "description": "The date when the invite was claimed in ISO-8601 format."
+        },
+        "inviteUrl": {
+          "type": "string",
+          "description": "The URL where the invite can be claimed."
+        },
+        "fromContact": {
+          "$ref": "#/definitions/contactLink"
+        },
+        "toContact": {
+          "$ref": "#/definitions/contactLink"
+        }
+      }
+    },
+    "languageCode": {
+      "type": "string",
+      "description": "Language code in ISO 639-1 format, some of them with an ISO 3166-1 region suffix. The code en is US English.",
+      "enum": [
+        "en",
+        "en-gb",
+        "da",
+        "de",
+        "es",
+        "fr",
+        "hu",
+        "it",
+        "ja",
+        "nb",
+        "nl",
+        "pl",
+        "pt",
+        "ro",
+        "ru",
+        "sv",
+        "tr",
+        "zh-cn"
+      ]
+    },
     "requestTranslations": {
       "type": "array",
       "items": {
         "type": "object",
         "properties": {
           "languageCode": {
-            "type": "string",
-            "description": "The language code in ISO 639-1 format."
+            "$ref": "#/definitions/languageCode"
           },
           "translation": {
             "type": "string",
@@ -11012,7 +12065,11 @@
           "type": "string",
           "description": "ID of the integrated resource."
         }
-      }
+      },
+      "required": [
+        "integratedSystemName",
+        "integratedSystemId"
+      ]
     },
     "distributorAccountInfo": {
       "type": "object",
@@ -11042,7 +12099,10 @@
           "description": "URL to the website of the company."
         }
       },
-      "description": "General info about the distributor account."
+      "description": "General info about the distributor account.",
+      "required": [
+        "name"
+      ]
     },
     "distributorContactInfo": {
       "type": "object",
@@ -11087,6 +12147,46 @@
         "lastName",
         "email"
       ],
+      "description": "General info about the contact."
+    },
+    "responseDistributorContactInfo": {
+      "type": "object",
+      "properties": {
+        "firstName": {
+          "type": "string",
+          "description": "First name of the contact."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "Last name of the contact."
+        },
+        "email": {
+          "type": "string",
+          "description": "E-mail address of the contact."
+        },
+        "salutation": {
+          "type": "string",
+          "description": "Salutation of the contact."
+        },
+        "function": {
+          "type": "string",
+          "description": "Job title of the contact."
+        },
+        "phone": {
+          "type": "string",
+          "description": "Phone number of the contact."
+        },
+        "mobile": {
+          "type": "string",
+          "description": "Mobile phone number of the contact"
+        },
+        "preferredLanguageIso": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 5,
+          "description": "Default language of the contact in ISO 639-1 format."
+        }
+      },
       "description": "General info about the contact."
     },
     "requestPostBulkUpsertContacts": {
@@ -11185,7 +12285,7 @@
         },
         "vatCondition": {
           "type": "string",
-          "description": "The default VAT condition code for this contact. Available codes are defined inside your HiveCPQ environment."
+          "description": "Code of a VAT condition in the format PERCENTAGE_NAME, for example 21_NORMAL. Projects take the VAT percentage from the number before the first underscore. The code is not checked against the VAT conditions defined in your CPQ environment."
         },
         "deliveryCondition": {
           "type": "string",
@@ -11213,7 +12313,7 @@
       "properties": {
         "targetVersion": {
           "type": "string",
-          "description": "Version number (e.g. 1.0.0) you want to copy data to. Providing 'top' accesses the highest available version."
+          "description": "Version number (e.g. 1.0.0) you want to copy data to, 'top' for the highest-numbered version, or 'active' for the published ACTIVE version, if the container has one. Copying to 'active' writes straight into the published version customers are served."
         }
       },
       "required": [
@@ -11398,6 +12498,10 @@
         "step": {
           "type": "number",
           "description": "The step value to use for each incremental step for this component quantity."
+        },
+        "isDefault": {
+          "type": "boolean",
+          "description": "Whether this should be the default quantity of the component. Mark at most one. When none is marked, the current default stays if it is kept, otherwise the oldest quantity becomes the default."
         }
       },
       "required": [
@@ -11412,14 +12516,14 @@
       "properties": {
         "integratedSystemName": {
           "type": "string",
-          "description": "Optional. Only target units linked to an integrated system."
+          "description": "Optional. Only target quantities linked to an integrated system, and only remove quantities owned by that system."
         },
         "quantities": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/requestComponentQuantity"
           },
-          "description": "A set of quantities. To clear existing values specify an empty list."
+          "description": "A set of quantities, matched on unit. Quantities whose unit is not in the list are removed, so an empty list clears them. Each unit code can appear once. Changing or removing a protected quantity requires the PROTECTED_COMPONENT_QUANTITY_EDIT permission."
         }
       },
       "required": [
@@ -11455,17 +12559,34 @@
         },
         "currency": {
           "type": "string",
-          "description": "The currency in ISO 4217 format."
+          "description": "Currency of the price in ISO 4217 format. Required with pricing V1; optional with pricing V2."
         },
         "unitId": {
           "type": "string",
           "description": "ID of the unit to be used with the price."
+        },
+        "fromQuantity": {
+          "type": "number",
+          "description": "The minimum quantity of this price entry."
+        },
+        "toQuantity": {
+          "type": "number",
+          "description": "The maximum quantity of this price entry."
+        },
+        "startDate": {
+          "type": "string",
+          "format": "date",
+          "description": "The date from which this price entry is effective."
+        },
+        "endDate": {
+          "type": "string",
+          "format": "date",
+          "description": "The date until which this price entry is effective."
         }
       },
       "required": [
         "listPrice",
         "priceCatalogId",
-        "currency",
         "unitId"
       ]
     },
@@ -11662,8 +12783,29 @@
               "currency": {
                 "type": "string",
                 "description": "The currency in ISO 4217 format."
+              },
+              "fromQuantity": {
+                "type": "number",
+                "description": "The minimum quantity of this price entry."
+              },
+              "toQuantity": {
+                "type": "number",
+                "description": "The maximum quantity of this price entry."
+              },
+              "startDate": {
+                "type": "string",
+                "format": "date",
+                "description": "The date from which this price entry is effective."
+              },
+              "endDate": {
+                "type": "string",
+                "format": "date",
+                "description": "The date until which this price entry is effective."
               }
-            }
+            },
+            "required": [
+              "itemId"
+            ]
           }
         }
       }
@@ -11693,7 +12835,10 @@
                 "type": "string",
                 "description": "The value assigned to the unique label"
               }
-            }
+            },
+            "required": [
+              "uniqueLabel"
+            ]
           }
         }
       }
@@ -12045,12 +13190,17 @@
               "integratedSystemId": {
                 "type": "string",
                 "description": "Optional integrated system ID used to create an integrated system link for this feature."
+              },
+              "featureGroupCode": {
+                "type": "string",
+                "description": "Code of the feature group where feature should be upserted."
               }
             },
             "required": [
               "itemId",
               "code",
-              "descriptions"
+              "descriptions",
+              "featureGroupCode"
             ]
           }
         }
@@ -12186,6 +13336,20 @@
         },
         "integratedSystemLink": {
           "$ref": "#/definitions/requestBasicIntegratedSystemLink"
+        },
+        "currency": {
+          "type": "string",
+          "description": "Default currency of this price catalog in ISO 4217 format."
+        },
+        "startDate": {
+          "type": "string",
+          "format": "date",
+          "description": "The date from which this price catalog is effective."
+        },
+        "endDate": {
+          "type": "string",
+          "format": "date",
+          "description": "The last date on which this price catalog is effective."
         }
       },
       "required": [
@@ -12203,6 +13367,20 @@
         "defaultPriceCatalog": {
           "type": "boolean",
           "description": "Set the price catalog as default."
+        },
+        "currency": {
+          "type": "string",
+          "description": "Default currency of this price catalog in ISO 4217 format."
+        },
+        "startDate": {
+          "type": "string",
+          "format": "date",
+          "description": "The date from which this price catalog is effective."
+        },
+        "endDate": {
+          "type": "string",
+          "format": "date",
+          "description": "The last date on which this price catalog is effective."
         }
       },
       "required": [
@@ -12265,11 +13443,15 @@
             },
             "required": [
               "fromContact",
-              "forContact"
+              "forContact",
+              "itemId"
             ]
           }
         }
-      }
+      },
+      "required": [
+        "invites"
+      ]
     },
     "requestPostInvite": {
       "type": "object",
@@ -12843,6 +14025,10 @@
         },
         "integratedSystemLink": {
           "$ref": "#/definitions/requestBasicIntegratedSystemLink"
+        },
+        "contactId": {
+          "type": "string",
+          "description": "The ID of the contact who creates the project"
         }
       },
       "required": [
@@ -12915,11 +14101,11 @@
         },
         "containerName": {
           "type": "string",
-          "description": "Optionally choose a container from which the configurator should be used."
+          "description": "Optionally choose a container from which the configurator should be used. Only applied when version is sent as well; on its own it is ignored and the active configurator's version is used."
         },
         "version": {
           "type": "string",
-          "description": "Optionally choose a version from which the configurator should be used. This is the number of the version (e.g. 1.0.0) you want to access. Providing 'top' accesses the highest available version."
+          "description": "Optionally choose the version the configurator should be used from. A version number (e.g. 1.0.0), 'top' for the highest-numbered version, or 'active' for the published ACTIVE version, if the container has one. Only applied when containerName is sent as well; on its own it is ignored and the active configurator's version is used."
         },
         "integratedSystemLink": {
           "$ref": "#/definitions/requestBasicIntegratedSystemLink"
@@ -12967,10 +14153,7 @@
           "type": "string",
           "description": "The ISO 639-1 language code the document should be generated in."
         }
-      },
-      "required": [
-        "language"
-      ]
+      }
     },
     "requestPostSegmentGenerateOrderSummary": {
       "type": "object",
@@ -13046,7 +14229,7 @@
               "$ref": "#/definitions/companyContact"
             },
             "invoice": {
-              "$ref": "#/definitions/companyContact"
+              "$ref": "#/definitions/invoiceCompanyContact"
             },
             "installation": {
               "$ref": "#/definitions/companyContact"
@@ -13139,7 +14322,7 @@
           "$ref": "#/definitions/companyContact"
         },
         "invoice": {
-          "$ref": "#/definitions/companyContact"
+          "$ref": "#/definitions/invoiceCompanyContact"
         },
         "productGroup": {
           "type": "string",
@@ -13169,7 +14352,7 @@
           "$ref": "#/definitions/companyContact"
         },
         "invoice": {
-          "$ref": "#/definitions/companyContact"
+          "$ref": "#/definitions/invoiceCompanyContact"
         },
         "productGroup": {
           "type": "string",
@@ -13210,7 +14393,7 @@
           "$ref": "#/definitions/companyContact"
         },
         "invoice": {
-          "$ref": "#/definitions/companyContact"
+          "$ref": "#/definitions/invoiceCompanyContact"
         }
       },
       "required": [
@@ -13250,7 +14433,7 @@
           "$ref": "#/definitions/companyContact"
         },
         "invoice": {
-          "$ref": "#/definitions/companyContact"
+          "$ref": "#/definitions/invoiceCompanyContact"
         }
       },
       "required": [
@@ -13343,7 +14526,7 @@
             },
             "unitCode": {
               "type": "string",
-              "description": "The unique code of a unit."
+              "description": "The unique code of a unit in the container version of the item's product. Required when the manufacturer uses pricing V2, unless the item is a configured product. With pricing V1, omit it to keep the item's current unit."
             }
           }
         }
@@ -13442,6 +14625,24 @@
         },
         "integratedSystemLink": {
           "$ref": "#/definitions/requestBasicIntegratedSystemLink"
+        },
+        "salesConditions": {
+          "type": "object",
+          "description": "Sales conditions of a distributor account.",
+          "properties": {
+            "vatConditionCode": {
+              "type": "string",
+              "description": "Code of a VAT condition in the format PERCENTAGE_NAME, for example 21_NORMAL. Projects take the VAT percentage from the number before the first underscore. The code is not checked against the VAT conditions defined in your CPQ environment."
+            },
+            "deliveryConditionCode": {
+              "type": "string",
+              "description": "Code of a delivery condition."
+            },
+            "paymentConditionCode": {
+              "type": "string",
+              "description": "Code of a payment condition."
+            }
+          }
         }
       },
       "required": [
@@ -13456,6 +14657,24 @@
         },
         "address": {
           "$ref": "#/definitions/address"
+        },
+        "salesConditions": {
+          "type": "object",
+          "description": "Sales conditions of a distributor account.",
+          "properties": {
+            "vatConditionCode": {
+              "type": "string",
+              "description": "Code of a VAT condition in the format PERCENTAGE_NAME, for example 21_NORMAL. Projects take the VAT percentage from the number before the first underscore. The code is not checked against the VAT conditions defined in your CPQ environment."
+            },
+            "deliveryConditionCode": {
+              "type": "string",
+              "description": "Code of a delivery condition."
+            },
+            "paymentConditionCode": {
+              "type": "string",
+              "description": "Code of a payment condition."
+            }
+          }
         }
       }
     },
@@ -13730,7 +14949,6 @@
         "type",
         "companyId",
         "orderReference",
-        "claimNumber",
         "articles"
       ]
     },
@@ -13957,8 +15175,7 @@
         "type": "object",
         "properties": {
           "languageCode": {
-            "type": "string",
-            "description": "The language code in ISO 639-1 format."
+            "$ref": "#/definitions/languageCode"
           },
           "translation": {
             "type": "string",
@@ -14022,11 +15239,15 @@
         },
         "unitCode": {
           "type": "string",
-          "description": "The Unit."
+          "description": "The code of the unit."
         },
         "markup": {
           "type": "string",
           "description": "The price markup."
+        },
+        "subDistributorPurchasePrice": {
+          "type": "string",
+          "description": "The purchase price for a sub-distributor."
         }
       },
       "description": "The pricing information."
@@ -14052,7 +15273,10 @@
         "audit": {
           "$ref": "#/definitions/responseAudit"
         }
-      }
+      },
+      "required": [
+        "code"
+      ]
     },
     "responseComponentPropertyWithoutAudit": {
       "type": "object",
@@ -14342,7 +15566,10 @@
         "total": {
           "$ref": "#/definitions/responseTotalCount"
         }
-      }
+      },
+      "required": [
+        "items"
+      ]
     },
     "responseGetCompany": {
       "type": "object",
@@ -14388,7 +15615,7 @@
           "$ref": "#/definitions/companySalesConditions"
         },
         "productStore": {
-          "$ref": "#/definitions/companyProductStore"
+          "$ref": "#/definitions/responseCompanyProductStore"
         },
         "defaultProjectSettings": {
           "$ref": "#/definitions/companyDefaultProjectSettings"
@@ -14419,44 +15646,17 @@
         "items": {
           "type": "array",
           "items": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "description": "ID of an invite."
-              },
-              "status": {
-                "$ref": "#/definitions/enumInviteStatus"
-              },
-              "toEmail": {
-                "type": "string",
-                "description": "The e-mail address to which the invite was sent."
-              },
-              "createdAt": {
-                "$ref": "#/definitions/createdAt"
-              },
-              "claimedAt": {
-                "type": "string",
-                "description": "The date when the invite was claimed in ISO-8601 format."
-              },
-              "inviteUrl": {
-                "type": "string",
-                "description": "The URL where the invite can be claimed."
-              },
-              "fromContact": {
-                "$ref": "#/definitions/contactLink"
-              },
-              "toContact": {
-                "$ref": "#/definitions/contactLink"
-              }
-            }
+            "$ref": "#/definitions/responseInvite"
           },
           "description": "A list of invites."
         },
         "total": {
           "$ref": "#/definitions/responseTotalCount"
         }
-      }
+      },
+      "required": [
+        "items"
+      ]
     },
     "responseGetContact": {
       "type": "object",
@@ -14585,6 +15785,18 @@
               },
               "audit": {
                 "$ref": "#/definitions/responseAudit"
+              },
+              "isDefault": {
+                "type": "boolean",
+                "description": "Whether this is the default quantity of the component. A configurator node added without a unit gets this unit."
+              },
+              "isProtected": {
+                "type": "boolean",
+                "description": "Whether this quantity is managed by a connector. Set when a user with the PROTECTED_COMPONENT_QUANTITY_EDIT permission writes it. Only such a user can then change or remove it."
+              },
+              "isDefaultProtected": {
+                "type": "boolean",
+                "description": "Whether the default flag on this quantity is managed by a connector. Set when a user with the PROTECTED_COMPONENT_QUANTITY_EDIT permission marks it as the default."
               }
             },
             "description": "A component quantity."
@@ -14666,6 +15878,28 @@
               "currency": {
                 "type": "string",
                 "description": "The currency in ISO 4217 format."
+              },
+              "fromQuantity": {
+                "type": "number",
+                "description": "The minimum quantity of this price entry."
+              },
+              "toQuantity": {
+                "type": "number",
+                "description": "The maximum quantity of this price entry."
+              },
+              "startDate": {
+                "type": "string",
+                "format": "date",
+                "description": "The date from which this price entry is effective."
+              },
+              "endDate": {
+                "type": "string",
+                "format": "date",
+                "description": "The date until which this price entry is effective."
+              },
+              "isProtected": {
+                "type": "boolean",
+                "description": "Whether this price entry is managed by a connector."
               }
             }
           },
@@ -14928,7 +16162,10 @@
                 "type": "string",
                 "description": "The value assigned to the unique label"
               }
-            }
+            },
+            "required": [
+              "uniqueLabel"
+            ]
           }
         }
       }
@@ -14997,7 +16234,10 @@
         "total": {
           "$ref": "#/definitions/responseTotalCount"
         }
-      }
+      },
+      "required": [
+        "items"
+      ]
     },
     "responseGetProperties": {
       "type": "object",
@@ -15160,6 +16400,20 @@
               },
               "externalLinks": {
                 "$ref": "#/definitions/externalLinks"
+              },
+              "parentMainCategory": {
+                "type": "object",
+                "description": "The parent category.",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "ID of the parent main category."
+                  },
+                  "code": {
+                    "type": "string",
+                    "description": "Code of the parent main category."
+                  }
+                }
               }
             }
           }
@@ -15270,6 +16524,9 @@
         },
         "name": {
           "$ref": "#/definitions/requestTranslations"
+        },
+        "descriptions": {
+          "$ref": "#/definitions/requestTranslations"
         }
       },
       "required": [
@@ -15298,6 +16555,9 @@
               },
               "externalLinks": {
                 "$ref": "#/definitions/externalLinks"
+              },
+              "descriptions": {
+                "$ref": "#/definitions/responseTranslations"
               }
             }
           },
@@ -15554,7 +16814,7 @@
               "$ref": "#/definitions/companyContact"
             },
             "invoice": {
-              "$ref": "#/definitions/companyContact"
+              "$ref": "#/definitions/invoiceCompanyContact"
             },
             "sellTo": {
               "$ref": "#/definitions/companyContact"
@@ -15658,13 +16918,29 @@
           "description": "The order group."
         },
         "configurationStatus": {
-          "$ref": "#/definitions/enumConfigurationStatus"
+          "$ref": "#/definitions/enumProjectSegmentConfigurationStatus"
         },
         "configuration": {
           "$ref": "#/definitions/configurationLink"
         },
         "subDistributor": {
           "$ref": "#/definitions/companyLink"
+        },
+        "segmentPricingDate": {
+          "type": "object",
+          "description": "The pricing date set on this segment for date-aware price resolution.",
+          "properties": {
+            "pricingDate": {
+              "type": "string",
+              "format": "date",
+              "description": "The date used for price resolution."
+            },
+            "pricingDateSetAt": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Timestamp when the pricing date was set."
+            }
+          }
         }
       }
     },
@@ -15753,7 +17029,7 @@
           "items": {
             "type": "string"
           },
-          "description": "Identifiers of the item in an external system."
+          "description": "Serial numbers assigned to this item, either entered manually or supplied by an external system. One item can have multiple serial numbers, one per unit of the quantity field. Empty when the item has no external serial numbers."
         },
         "component": {
           "$ref": "#/definitions/componentLink"
@@ -15780,6 +17056,10 @@
         },
         "configuration": {
           "$ref": "#/definitions/configurationLink"
+        },
+        "orderSerialNumber": {
+          "type": "string",
+          "description": "The serial number that was entered in the product store when creating the item."
         }
       }
     },
@@ -15860,6 +17140,24 @@
               },
               "audit": {
                 "$ref": "#/definitions/responseAudit"
+              },
+              "salesConditions": {
+                "type": "object",
+                "description": "Sales conditions of a distributor account.",
+                "properties": {
+                  "vatConditionCode": {
+                    "type": "string",
+                    "description": "Code of a VAT condition in the format PERCENTAGE_NAME, for example 21_NORMAL. Projects take the VAT percentage from the number before the first underscore. The code is not checked against the VAT conditions defined in your CPQ environment."
+                  },
+                  "deliveryConditionCode": {
+                    "type": "string",
+                    "description": "Code of a delivery condition."
+                  },
+                  "paymentConditionCode": {
+                    "type": "string",
+                    "description": "Code of a payment condition."
+                  }
+                }
               }
             }
           },
@@ -15883,7 +17181,7 @@
                 "description": "ID of the distributor contact."
               },
               "info": {
-                "$ref": "#/definitions/distributorContactInfo"
+                "$ref": "#/definitions/responseDistributorContactInfo"
               },
               "address": {
                 "$ref": "#/definitions/address"
@@ -15898,7 +17196,8 @@
                 "$ref": "#/definitions/externalLinks"
               },
               "account": {
-                "description": "Distributor account to which the contact belongs.",
+                "type": "object",
+                "description": "The account of the distributor to which the contact is linked.",
                 "properties": {
                   "id": {
                     "type": "string",
@@ -16142,6 +17441,33 @@
         },
         "externalLinks": {
           "$ref": "#/definitions/externalLinks"
+        },
+        "type": {
+          "type": "string",
+          "description": "The type of price catalog.",
+          "enum": [
+            "PRICE",
+            "DISCOUNT",
+            "BOTH"
+          ]
+        },
+        "currency": {
+          "type": "string",
+          "description": "Default currency of this price catalog in ISO 4217 format."
+        },
+        "startDate": {
+          "type": "string",
+          "format": "date",
+          "description": "The date from which this price catalog is effective."
+        },
+        "endDate": {
+          "type": "string",
+          "format": "date",
+          "description": "The last date on which this price catalog is effective."
+        },
+        "isProtected": {
+          "type": "boolean",
+          "description": "Whether this price catalog is managed by a connector."
         }
       }
     },
@@ -16495,7 +17821,7 @@
                 "description": "ID of the event."
               },
               "eventType": {
-                "$ref": "#/definitions/enumWebhookEventSubscription"
+                "$ref": "#/definitions/enumEventType"
               },
               "eventGroup": {
                 "$ref": "#/definitions/enumEventGroup"
@@ -16658,10 +17984,6 @@
             "currency": {
               "type": "string",
               "description": "Currency of the configuration in ISO 4217 format."
-            },
-            "numberOfDecimals": {
-              "type": "integer",
-              "description": "The decimal precision of the prices."
             }
           },
           "description": "Pricing information of the configuration."
@@ -16718,6 +18040,424 @@
       "type": "integer",
       "format": "int32",
       "description": "The total number of results."
+    },
+    "responseGetProjectAttachments": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "description": "A list of project attachments.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "ID of the attachment, derived from its file name and scope."
+              },
+              "fileName": {
+                "type": "string",
+                "description": "Name of the stored file. Characters other than letters, digits, _, . and - are replaced by _."
+              },
+              "scope": {
+                "type": "string",
+                "description": "Who can see the attachment.",
+                "enum": [
+                  "MANUFACTURER_SHARED",
+                  "MANUFACTURER_PRIVATE",
+                  "DISTRIBUTOR_SHARED"
+                ]
+              },
+              "downloadUrl": {
+                "type": "string",
+                "description": "Pre-signed download URL, valid for one hour. Only present when includeDownloadUrl is true."
+              }
+            }
+          }
+        },
+        "total": {
+          "type": "integer",
+          "description": "Number of attachments in the list."
+        }
+      }
+    },
+    "responseGenerateAttachmentSignedUrl": {
+      "type": "object",
+      "description": "A short-lived URL from which the attachment can be downloaded directly, plus its original file name.",
+      "properties": {
+        "downloadUrl": {
+          "type": "string",
+          "description": "Pre-signed download URL, valid for one hour."
+        },
+        "fileName": {
+          "type": "string",
+          "description": "Name of the stored file. Characters other than letters, digits, _, . and - are replaced by _."
+        }
+      }
+    },
+    "responseGetProjectSegmentItemAttachments": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "description": "A list of project segment item attachments.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "ID of the attachment, derived from its file name and scope."
+              },
+              "fileName": {
+                "type": "string",
+                "description": "Name of the stored file. Characters other than letters, digits, _, . and - are replaced by _."
+              },
+              "scope": {
+                "type": "string",
+                "description": "Who added the attachment. Files added through this API are MANUFACTURER_SHARED; distributors add DISTRIBUTOR_SHARED files themselves via the UI.",
+                "enum": [
+                  "MANUFACTURER_SHARED",
+                  "DISTRIBUTOR_SHARED"
+                ]
+              },
+              "downloadUrl": {
+                "type": "string",
+                "description": "Pre-signed download URL, valid for one hour. Only present when includeDownloadUrl is true."
+              }
+            }
+          }
+        },
+        "total": {
+          "type": "integer",
+          "description": "Number of attachments in the list."
+        }
+      }
+    },
+    "responseGenerateFileSignedUrl": {
+      "type": "object",
+      "description": "A short-lived URL from which the file can be downloaded directly, plus its original file name.",
+      "properties": {
+        "publicUrl": {
+          "type": "string",
+          "description": "Pre-signed download URL, valid for one hour."
+        },
+        "fileName": {
+          "type": "string",
+          "description": "Original name of the stored file."
+        }
+      }
+    },
+    "responseGenerateConfigurationFileUrl": {
+      "type": "object",
+      "description": "A URL from which the configuration file can be downloaded directly, plus its file name and accessibility.",
+      "properties": {
+        "publicUrl": {
+          "type": "string",
+          "description": "Download URL. For a PRIVATE file this is pre-signed and valid for one hour; for a PUBLIC file it is the durable public URL."
+        },
+        "fileName": {
+          "type": "string",
+          "description": "Name of the stored file."
+        },
+        "accessibility": {
+          "type": "string",
+          "description": "Whether the returned URL is durable (PUBLIC) or short-lived (PRIVATE).",
+          "enum": [
+            "PUBLIC",
+            "PRIVATE"
+          ]
+        }
+      }
+    },
+    "requestPostProjectGenerateOutputDocumentSignedUrl": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "The type of the output document.",
+          "enum": [
+            "QUOTE",
+            "ORDER_SUMMARY",
+            "CALCULATION"
+          ]
+        },
+        "outputDocumentTemplateId": {
+          "type": "string",
+          "description": "Generate a document corresponding to the output document template id"
+        },
+        "language": {
+          "type": "string",
+          "description": "The document will be generated in the specified language. When not specified, \"en\" will be taken as the default"
+        },
+        "format": {
+          "type": "string",
+          "description": "The format the document is rendered in. Only these two are accepted; any other value is rejected before the document is generated.",
+          "enum": [
+            "PDF",
+            "WORD"
+          ]
+        }
+      },
+      "required": [
+        "format"
+      ]
+    },
+    "requestPostProjectSegmentGenerateOrderSummarySignedUrl": {
+      "type": "object",
+      "properties": {
+        "language": {
+          "type": "string",
+          "description": "The document will be generated in the specified language."
+        },
+        "format": {
+          "type": "string",
+          "description": "The format the document is rendered in. Only these two are accepted; any other value is rejected before the document is generated.",
+          "enum": [
+            "PDF",
+            "WORD"
+          ]
+        }
+      },
+      "required": [
+        "language",
+        "format"
+      ]
+    },
+    "requestPostProjectSegmentAddV2Configuration": {
+      "type": "object",
+      "properties": {
+        "quantity": {
+          "type": "integer"
+        },
+        "configuratorId": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the configuration"
+        },
+        "configurationCode": {
+          "type": "string",
+          "description": "Unique code from another configuration from which a new configuration will be created."
+        },
+        "initialValues": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "uniqueLabel": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              },
+              "quantity": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "uniqueLabel"
+            ]
+          }
+        },
+        "integratedSystemLink": {
+          "type": "object",
+          "description": "A system link which will be added directly after creation of the resource that is being added.",
+          "properties": {
+            "integratedSystemName": {
+              "type": "string"
+            },
+            "integratedSystemId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "integratedSystemName",
+            "integratedSystemId"
+          ]
+        },
+        "containerName": {
+          "type": "string",
+          "description": "Optionally choose a container from which the configurator should be used. Only applied when version is sent as well; on its own it is ignored and the active configurator's version is used."
+        },
+        "version": {
+          "type": "string",
+          "description": "Optionally choose the version the configurator should be used from. A version number (e.g. 1.0.0), 'top' for the highest-numbered version, or 'active' for the published ACTIVE version, if the container has one. Only applied when containerName is sent as well; on its own it is ignored and the active configurator's version is used."
+        }
+      },
+      "required": [
+        "configuratorId"
+      ]
+    },
+    "responsePostAddConfiguration": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "ID of the generated project segment item."
+        },
+        "configurationId": {
+          "type": "string",
+          "description": "ID of the configuration held by the generated project segment item."
+        }
+      }
+    },
+    "requestPostBulkUpsertPriceCatalogCategories": {
+      "type": "object",
+      "properties": {
+        "catalogCategories": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "itemId": {
+                "type": "string",
+                "description": "A custom identifier of this item that must be unique within the entire request. This is not the price catalog ID."
+              },
+              "priceCatalogName": {
+                "type": "string",
+                "description": "Name of the price catalog."
+              },
+              "categories": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "mainCategoryCode": {
+                      "type": "string",
+                      "description": "Code of the main category."
+                    },
+                    "subCategoryCodes": {
+                      "type": "array",
+                      "description": "Codes of the sub-categories to link. Each must belong to the main category.",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "mainCategoryCode",
+                    "subCategoryCodes"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "itemId",
+              "priceCatalogName",
+              "categories"
+            ]
+          }
+        }
+      },
+      "required": [
+        "catalogCategories"
+      ]
+    },
+    "responseBulkPriceCatalogCategories": {
+      "type": "object",
+      "properties": {
+        "results": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "itemId": {
+                "type": "string",
+                "description": "Custom identifier of this item."
+              },
+              "resourceId": {
+                "type": "string",
+                "description": "ID of the created or updated resource."
+              },
+              "status": {
+                "type": "string",
+                "description": "Status of the bulk item.",
+                "enum": [
+                  "CREATED",
+                  "UPDATED",
+                  "FAILED"
+                ]
+              },
+              "message": {
+                "type": "string",
+                "description": "Message with additional information if the item failed to be handled."
+              }
+            }
+          }
+        },
+        "successCount": {
+          "type": "number",
+          "description": "The amount of successfully handled items."
+        }
+      }
+    },
+    "requestPostBulkDeletePriceCatalogCategories": {
+      "type": "object",
+      "properties": {
+        "catalogCategories": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "itemId": {
+                "type": "string",
+                "description": "A custom identifier of this item that must be unique within the entire request. This is not the price catalog ID."
+              },
+              "priceCatalogName": {
+                "type": "string",
+                "description": "Name of the price catalog."
+              },
+              "categories": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "mainCategoryCode": {
+                      "type": "string",
+                      "description": "Code of the main category."
+                    },
+                    "subCategoryCodes": {
+                      "type": "array",
+                      "description": "Codes of the sub-categories to unlink. Each must belong to the main category. Leave empty or out to unlink the main category and all its sub-categories.",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "mainCategoryCode"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "itemId",
+              "priceCatalogName",
+              "categories"
+            ]
+          }
+        }
+      },
+      "required": [
+        "catalogCategories"
+      ]
+    },
+    "responseCheckConfiguration": {
+      "type": "object",
+      "properties": {
+        "configurationStatus": {
+          "type": "string",
+          "description": "Status of the item: VALID when it has no errors, ERROR when its configuration has an error, UPGRADE or ACCEPT_UPGRADE when it must be upgraded to a new configurator version.",
+          "enum": [
+            "VALID",
+            "RUNNING",
+            "REMOVED",
+            "ERROR",
+            "UPGRADE",
+            "ACCEPT_UPGRADE"
+          ]
+        }
+      }
     }
   },
   "parameters": {
@@ -16765,7 +18505,7 @@
       "in": "path",
       "name": "manufacturerId",
       "x-ms-summary": "Manufacturer ID",
-      "description": "ID of the manufacturer company to which you are connecting.",
+      "description": "ID of the manufacturer company to which you are connecting. Case-sensitive: 'acme' and 'Acme' are different IDs.",
       "type": "string",
       "required": true
     },
@@ -16838,7 +18578,7 @@
       "in": "path",
       "name": "version",
       "x-ms-summary": "Container Version",
-      "description": "Number of the version (e.g. 1.0.0) you want to access. Providing 'top' accesses the highest available version.",
+      "description": "Version number (e.g. 1.0.0), 'top' for the highest-numbered version, or 'active' for the published ACTIVE version, if the container has one.",
       "type": "string",
       "default": "top",
       "required": true
@@ -17060,8 +18800,28 @@
       "name": "language",
       "in": "query",
       "x-ms-summary": "Language",
-      "description": "Specify the ISO 639-1 language code in which translated fields should be returned. If not provided, the language of the user is used.",
-      "type": "string"
+      "description": "Language the translated fields are returned in. Left out, the preferred language of the authenticated user is used, English when there is none.",
+      "type": "string",
+      "enum": [
+        "en",
+        "en-gb",
+        "da",
+        "de",
+        "es",
+        "fr",
+        "hu",
+        "it",
+        "ja",
+        "nb",
+        "nl",
+        "pl",
+        "pt",
+        "ro",
+        "ru",
+        "sv",
+        "tr",
+        "zh-cn"
+      ]
     },
     "bodyMultiPartFormDataFile": {
       "in": "formData",
@@ -17112,13 +18872,13 @@
       }
     },
     "defaultForbidden": {
-      "description": "Forbidden",
+      "description": "FORBIDDEN",
       "schema": {
         "$ref": "#/definitions/responseHiveError"
       }
     },
     "defaultNotFound": {
-      "description": "Not Found",
+      "description": "NOT FOUND",
       "schema": {
         "$ref": "#/definitions/responseHiveError"
       }
@@ -17155,8 +18915,8 @@
     "oauth2-auth": {
       "type": "oauth2",
       "flow": "accessCode",
-      "authorizationUrl": "https://ebusinesscloud.eu.auth0.com/authorize",
-      "tokenUrl": "https://ebusinesscloud.eu.auth0.com/oauth/token",
+      "authorizationUrl": "https://authenticate.hivecpq.com/authorize",
+      "tokenUrl": "https://authenticate.hivecpq.com/oauth/token",
       "scopes": {
         "offline_access": "offline_access",
         "openId": "openId",
