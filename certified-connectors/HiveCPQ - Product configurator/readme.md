@@ -29,11 +29,11 @@ You have to
 * Archive a contact: Archive a specific contact and remove its invites.
 * Search distributor accounts: Search accounts in the address book of a distributor.
 * Add a distributor account: Add an account to the address book of a distributor.
-* Delete a distributor account: Delete a specific account from the address book of a distributor. An account can only be removed if it is not used in any projects and has no contacts.
+* Archive a distributor account: Archive a specific account from the address book of a distributor. The account is archived, not deleted. An account can only be archived if it is not used as an address on any project and has no active contacts.
 * Update distributor account: Update a specific account in the address book of a distributor.
 * Search distributor contacts: Search contacts in the address book of a distributor.
 * Add a distributor contact: Add a new contact to the address book of a distributor.
-* Delete a distributor contact: Delete a specific contact from the address book of a distributor.
+* Archive a distributor contact: Archive a specific contact from the address book of a distributor. The contact is archived, not deleted. A contact can only be archived if it is not used as an address on any project and is not archived yet.
 * Update a distributor contact: Update a specific contact in the address book of a distributor.
 * Search invites: Search invites of a manufacturer.
 * Add an invite: Add an invite for a contact to join a company.
@@ -103,7 +103,12 @@ You have to
 * Copy a project: Copies all data of a project to a new project.
 * Recalculate a project: Start an asynchronous recalculation of the project.
 * Generate a document for a project: Generate a PDF document for a specific project. The template ID is optional only if the document type is QUOTE and a default template has been configured.
+* Generate a project document and return a download URL: Generate a document for a specific project and return a short-lived URL to download it, rather than streaming the bytes. The template ID is optional only if the document type is QUOTE and a default template has been configured.
 * Add a configuration to a project: Add a new V2 configuration to a project.
+* Search attachments of a project: Search the attachments of a specific project, from all three scopes.
+* Add an attachment to a project: Add an attachment of at most 50 MB to a specific project. An attachment with the same file name and scope is replaced.
+* Delete an attachment of a project: Delete an attachment of a specific project, from any scope.
+* Generate a signed download URL for a project attachment: Generate a short-lived signed URL for downloading an attachment of a specific project.
 * Refresh the prices in running projects: Refresh prices of all projects which have not yet reached step 2 in the order process with master data.
 * Search project segments: Search project segments of a manufacturer.
 * Get a project segment: Get a specific project segment of a manufacturer.
@@ -117,17 +122,26 @@ You have to
 * Cancel order process of a project segment: Cancel the order process and move a project segment back to step 2.
 * Change the settings of a project segment: Change the settings of a project segment. Settings are only available if a segment configurator is configured.
 * Add a configuration to a segment: Add a V1 configuration to a specific project segment.
+* Add a V2 configuration to a project segment: Add a V2 configuration to a project segment, optionally from a chosen configurator version (containerName and version).
 * Generate a PDF order summary for a project segment: Generate a PDF order summary document for a specific project segment.
 * Generate a Word order summary for a project segment: Generate a Microsoft Word order summary document for a specific project segment.
+* Generate a segment order summary and return a download URL: Generate an order summary document for a specific project segment and return a short-lived URL to download it, rather than streaming the bytes.
 * Search project segment items: Search project segment items of a specific manufacturer.
 * Get project segment item: Get a specific project segment item of a manufacturer.
 * Delete a project segment item: Delete a specific project segment item from a project.
 * Update a project segment item: Update a specific project segment item of a manufacturer.
 * Copy project segment item to another project: Copies a project segment item to another project. If the item has a configuration attached it will automatically be upgraded to the newest version.
+* Search attachments of a project segment item: Search the attachments of a specific project segment item, from both scopes.
+* Add an attachment to a project segment item: Add an attachment of at most 50 MB to a specific project segment item. It is stored with scope MANUFACTURER_SHARED. An attachment with the same file name is replaced.
+* Delete an attachment of a project segment item: Delete an attachment of a specific project segment item, from either scope.
+* Generate a signed download URL for a project segment item attachment: Generate a short-lived signed URL for downloading an attachment of a specific project segment item.
 * Add a standalone configuration: Create a standalone configuration by launching a configuration check for a V2 configurator
 * Get a configuration: Get a specific configuration of a manufacturer.
 * Update configuration: Update the values of the nodes in a configuration.
 * Get file from a configuration: Get the file attached to a file node in the configuration.
+* Replace file in a configuration: Upload a file to a file node in the configuration. Any file already attached to the node is replaced. Only supported for B2B and standalone configurations.
+* Delete file from a configuration: Delete the file attached to a file node in the configuration and clear its value. Only supported for B2B and standalone configurations.
+* Generate a download URL for a configuration file: Generate a download URL for the file attached to a file node in the configuration.
 * Search integrated system links: Search integrated system links of a manufacturer. An Integrated System link stores a link between a Hive entity and an external system entity.
 * Add integrated system link: Add a new integrated system link for a resource.
 * Delete an integrated system link: Delete a specific integrated system link.
@@ -152,6 +166,8 @@ You have to
 * Get a price catalog: Get a specific price catalog of a manufacturer.
 * Update a price catalog: Update a specific price catalog of a manufacturer.
 * Delete a price catalog: Delete a specific price catalog.
+* Link categories to price catalogs in bulk: Link sub-categories to up to 50 price catalogs. Each sub-category's main category is linked too. Requires pricing version V2.
+* Unlink categories from price catalogs in bulk: Unlink categories from up to 50 price catalogs. Omit subCategoryCodes to unlink a main category with all its sub-categories. Requires pricing version V2.
 * Search complaints: Search complaints of a manufacturer
 * Add a complaint: Add a new complaint for a manufacturer.
 * Get a complaint: Get a specific complaint of a manufacturer.
@@ -163,6 +179,7 @@ You have to
 * Search complaint attachments: Search attachments of a specific complaint.
 * Add a complaint attachment: Add a new attachment to a specific complaint.
 * Get a complaint attachment: Get an attachment of a specific complaint.
+* Generate a signed download URL for a complaint attachment: Generate a short-lived signed URL for downloading an attachment of a specific complaint.
 * Removes the attachment from a complaint: Removes the attachment from a complaint
 * Get a user account: Get a specific user account connected to the given manufacturer.
 * Search output document templates: Search output document templates of a manufacturer.
