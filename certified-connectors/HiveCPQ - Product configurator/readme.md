@@ -213,7 +213,7 @@ This is because of a conflict between the supported formats which powerautomate 
 
 ## FAQ
 
-### How long is the connection to HiveCPQ valid after entering the supplied credentials?
+### How long is the connection to Hive CPQ valid after entering the supplied credentials?
 The credentials will remain valid indefinitely. It is possible to request password renewals.
 The connection itself works based on inactivity expiration. If the connection was not used in any workflow runs for more than 2 months it will expire and the credentials will have to be re-entered.
 
